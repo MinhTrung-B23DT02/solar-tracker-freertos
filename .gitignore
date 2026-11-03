@@ -1,50 +1,29 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-*.elf
-*.bin
-*.hex
-
-# Build directories
+# Build output
 build/
 bin/
 obj/
 Debug/
 Release/
+*.o
+*.d
+*.elf
+*.hex
+*.bin
+*.map
+*.lst
 
-# IDE specific files
+# IDE and user-specific settings
 .vscode/
 .idea/
+.settings/
 *.uvoptx
 *.uvprojx
-*.mxproject
 *.launch
 .project
 .cproject
-.settings/
+.mxproject
+
+# Temporary files
+*.tmp
+*.bak
+*~

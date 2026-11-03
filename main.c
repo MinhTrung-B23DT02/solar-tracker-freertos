@@ -1,46 +1,64 @@
-#include <stdint.h>
 #include "bsp.h"
 #include "hal_gpio.h"
-#include "hal_uart.h"
+#include "hal_adc.h"
 #include "hal_i2c.h"
+#include "hal_pwm.h"
 #include "app_ipc.h"
 #include "task_sensor.h"
+#include "task_tracking.h"
 #include "task_display.h"
-
-/* FreeRTOS Header files (Bỏ comment khi đã thêm FreeRTOS source vào middlewares)
 #include "FreeRTOS.h"
 #include "task.h"
-*/
 
-static void SystemHardware_Init(void)
+static void Error_Handler(void)
 {
-    /* 1. Khởi tạo xung nhịp và cấu hình chân board mạch */
-    BSP_Init();
+    /* TODO: add a board-level error indication (e.g. LED blink). */
+    taskDISABLE_INTERRUPTS();
+    for (;;) {
+    }
+}
 
-    /* 2. Khởi tạo ngoại vi HAL */
-    HAL_GPIO_Init();
-    HAL_UART_Init(115200);
-    HAL_I2C_Init();
+void vApplicationStackOverflowHook(TaskHandle_t task, char *task_name)
+{
+    (void)task;
+    (void)task_name;
+    Error_Handler();
+}
+
+void vApplicationMallocFailedHook(void)
+{
+    Error_Handler();
 }
 
 int main(void)
 {
-    /* 1. Khởi tạo phần cứng */
-    SystemHardware_Init();
+    /* Stage 1: board and peripheral initialization. */
+    BSP_Init();
+    HAL_GPIO_Init();
+    HAL_ADC_Init();
+    HAL_I2C_Init();
+    HAL_PWM_Init();
 
-    /* 2. Khởi tạo cơ chế IPC (Queue, Semaphore, Mutex) */
-    App_IPC_Init();
-
-    /* 3. Khởi tạo các FreeRTOS Tasks */
-    Task_Sensor_Init();
-    Task_Display_Init();
-
-    /* 4. Khởi động bộ lập lịch FreeRTOS */
-    /* vTaskStartScheduler(); */
-
-    /* Nếu đến được đây nghĩa là bộ nhớ heap không đủ để chạy scheduler */
-    for (;;) {
+    /* Stage 2: create shared RTOS objects before creating tasks. */
+    if (app_ipc_init() != pdPASS) {
+        Error_Handler();
     }
 
+    /* Stage 3: create the three project tasks (no generic Comm task). */
+    if (task_sensor_create() != pdPASS) {
+        Error_Handler();
+    }
+    if (task_tracking_create() != pdPASS) {
+        Error_Handler();
+    }
+    if (task_display_create() != pdPASS) {
+        Error_Handler();
+    }
+
+    /* Stage 4: start FreeRTOS scheduler. */
+    vTaskStartScheduler();
+
+    /* Reaching here usually means the scheduler could not start (e.g. heap). */
+    Error_Handler();
     return 0;
 }

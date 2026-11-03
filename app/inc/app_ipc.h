@@ -1,31 +1,29 @@
 #ifndef APP_IPC_H
 #define APP_IPC_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
-#include <stdbool.h>
-
-/* FreeRTOS includes (Bỏ comment khi đã cấu hình FreeRTOS)
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "semphr.h"
-*/
 
-/* Data structure for inter-task communication (IPC) */
 typedef struct {
-    float temperature;
-    float humidity;
-    uint32_t timestamp;
-} sensor_data_msg_t;
+    uint16_t ldr_left;
+    uint16_t ldr_right;
+} LDR_Data_t;
 
-/* Khởi tạo các hàng đợi (Queue), Semaphore, Mutex phục vụ IPC */
-void App_IPC_Init(void);
+typedef struct {
+    uint16_t servo_angle_deg;
+    int16_t light_error;
+    uint8_t tracking_active;
+} Tracking_Status_t;
 
-#ifdef __cplusplus
-}
-#endif
+/* qLDR: Sensor -> Tracking; qStatus: Tracking -> Display.
+ * xI2CMutex protects the shared INA219 + SSD1306 I2C bus.
+ */
+extern QueueHandle_t qLDR;
+extern QueueHandle_t qStatus;
+extern SemaphoreHandle_t xI2CMutex;
+
+BaseType_t app_ipc_init(void);
 
 #endif /* APP_IPC_H */
